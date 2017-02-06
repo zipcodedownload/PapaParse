@@ -508,6 +508,14 @@ var PARSE_TESTS = [
 		}
 	},
 	{
+		description: "Mixed slash n and slash r should choose first as precident",
+		input: 'a,b,c\nd,e,f\rg,h,i\n',
+		expected: {
+			data: [['a', 'b', 'c'], ['d', 'e', 'f\rg', 'h', 'i'], ['']],
+			errors: []
+		}
+	},
+	{
 		description: "Header row with one row of data",
 		input: 'A,B,C\r\na,b,c',
 		config: { header: true },
@@ -618,6 +626,15 @@ var PARSE_TESTS = [
 		}
 	},
 	{
+		description: "Callback delimiter",
+		input: 'a$ b$ c',
+		config: { delimiter: function(input) { return input[1] + ' '; } },
+		expected: {
+			data: [['a', 'b', 'c']],
+			errors: []
+		}
+	},
+	{
 		description: "Dynamic typing converts numeric literals",
 		input: '1,2.2,1e3\r\n-4,-4.5,-4e-5\r\n-,5a,5-2',
 		config: { dynamicTyping: true },
@@ -642,6 +659,38 @@ var PARSE_TESTS = [
 		expected: {
 			data: [["A", "B", "C"], ["undefined", "null", "["], ["var", "float", "if"]],
 			errors: []
+		}
+	},
+	{
+		description: "Dynamic typing applies to specific columns",
+		input: 'A,B,C\r\n1,2.2,1e3\r\n-4,-4.5,-4e-5',
+		config: { header: true, dynamicTyping: { A: true, C: true } },
+		expected: {
+			data: [{"A": 1, "B": "2.2", "C": 1000}, {"A": -4, "B": "-4.5", "C": -0.00004}],
+			errors: []
+		}
+	},
+	{
+		description: "Dynamic typing applies to specific columns by index",
+		input: '1,2.2,1e3\r\n-4,-4.5,-4e-5\r\n-,5a,5-2',
+		config: { dynamicTyping: { 1: true } },
+		expected: {
+			data: [["1", 2.2, "1e3"], ["-4", -4.5, "-4e-5"], ["-", "5a", "5-2"]],
+			errors: []
+		}
+	},
+	{
+		description: "Dynamic typing can be applied to `__parsed_extra`",
+		input: 'A,B,C\r\n1,2.2,1e3,5.5\r\n-4,-4.5,-4e-5',
+		config: { header: true, dynamicTyping: { A: true, C: true, __parsed_extra: true } },
+		expected: {
+			data: [{"A": 1, "B": "2.2", "C": 1000, "__parsed_extra": [ 5.5 ]}, {"A": -4, "B": "-4.5", "C": -0.00004}],
+			errors: [{
+				"type": "FieldMismatch",
+				"code": "TooManyFields",
+				"message": "Too many fields: expected 3 fields but parsed 4",
+				"row": 0
+			}]
 		}
 	},
 	{
@@ -849,6 +898,16 @@ var PARSE_TESTS = [
 		config: { skipEmptyLines: true, delimiter: ',' },
 		expected: {
 			data: [[" "], ['a', 'b', 'c']],
+			errors: []
+		}
+	},
+	{
+		description: "Single quote as quote character",
+		notes: "Must parse correctly when single quote is specified as a quote character",
+		input: "a,b,'c,d'",
+		config: { quoteChar: "'"},
+		expected: {
+			data: [['a', 'b', 'c,d']],
 			errors: []
 		}
 	},
@@ -1111,6 +1170,18 @@ var UNPARSE_TESTS = [
 		description: "JSON null is treated as empty value",
 		input: [{ "Col1": "a", "Col2": null, "Col3": "c" }],
 		expected: 'Col1,Col2,Col3\r\na,,c'
+	},
+	{
+		description: "Custom quote character (single quote)",
+		input: [['a,d','b','c']],
+		config: { quoteChar: "'"},
+		expected: "'a,d',b,c"
+  },
+  {
+		description: "Don't print header if header:false option specified",
+		input: [{ "Col1": "a", "Col2": "b", "Col3": "c" }, { "Col1": "d", "Col2": "e", "Col3": "f" }],
+		config: { header: false },
+		expected: 'a,b,c\r\nd,e,f'
 	}
 ];
 
