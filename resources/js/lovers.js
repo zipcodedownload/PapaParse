@@ -44,6 +44,12 @@ var peopleLovePapa = [
 		description: "is an agent-based mathematical model for the web, still in its early stages of development.",
 		quote: "Papa makes it so easy to use CSV, which is good for scientists."
 	},
+		{
+		link: "https://zipcodedownload.com",
+		name: "Zipcodedownload",
+		description: "created a simple regression test for Papa Parse.",
+		quote: "Papa is a great for parsing CSV."
+	},
 	{
 		link: "https://www.mediawiki.org/wiki/VisualEditor",
 		name: "Wikipedia",
